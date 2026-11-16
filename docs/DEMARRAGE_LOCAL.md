@@ -88,3 +88,5 @@ Lancer ensuite `npm run local:setup` puis `npm run dev`.
   supprimer `.env` puis relancer `npm run local:setup`.
 - **Le port 5432 ou 6379 est déjà utilisé** : un PostgreSQL ou un Redis tourne déjà sur le poste. L'arrêter, ou utiliser
   la section « Sans Docker ».
+- **Erreurs `TS7006: Parameter ... implicitly has an 'any' type` dans l'API** : le client Prisma n'a pas été généré
+  (c'est le cas quand `npm run local:setup` s'est arrêté avant la fin). Lancer `npm run local:generate`, puis `npm run dev`.

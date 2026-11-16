@@ -16,7 +16,8 @@
     "local:env": "node scripts/local/init-env.js",
     "local:db": "node --env-file=.env node_modules/prisma/build/index.js db push --schema apps/api/prisma/schema.prisma",
     "local:seed": "node --env-file=.env -r ts-node/register apps/api/prisma/seed.ts && node --env-file=.env -r ts-node/register apps/api/prisma/seed.local.ts",
-    "local:setup": "npm run local:env && npm run build -w @burkindi/shared-types && npm run local:db && npm run local:seed",
+    "local:generate": "node node_modules/prisma/build/index.js generate --schema apps/api/prisma/schema.prisma",
+    "local:setup": "npm run local:env && npm run build -w @burkindi/shared-types && npm run local:generate && npm run local:db && npm run local:seed",
     "local:totp": "node --env-file=.env scripts/local/totp.js"
   },
   "devDependencies": { "turbo": "^2.0.0", "typescript": "^5.4.0" },
