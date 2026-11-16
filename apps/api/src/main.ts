@@ -1,3 +1,4 @@
+import './env'; // doit rester la première ligne : charge .env avant les autres modules (développement local)
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';

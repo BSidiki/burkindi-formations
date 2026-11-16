@@ -11,7 +11,8 @@ import { SecurityService } from '../security/security.service';
 import { FidoService } from './fido.service';
 const cfg = require('@burkindi/config');
 
-const COOKIE = { httpOnly: true, secure: true, sameSite: 'strict' as const, path: '/', domain: process.env.COOKIE_DOMAIN || undefined };
+// COOKIE_SECURE=false uniquement en développement local (http://localhost) ; sécurisé par défaut.
+const COOKIE = { httpOnly: true, secure: process.env.COOKIE_SECURE !== 'false', sameSite: 'strict' as const, path: '/', domain: process.env.COOKIE_DOMAIN || undefined };
 
 @Injectable()
 export class AuthService {

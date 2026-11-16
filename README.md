@@ -15,3 +15,6 @@ Dossier monorepo complet et unifié fusionnant l'ensemble des versions (v1 à v9
 4. **Parrainage & Retraits Mobile Money** : Code parrain (`BURK-xxxx`), 15% de ristourne et retraits Orange Money / Moov Money.
 5. **Gestion Admin & Validation WhatsApp** : Tableau de bord complet, filtres candidats, export Excel (.xlsx) et validation manuelle en 1 clic.
 6. **Hébergement VPS** : installeur `install.sh` (Ubuntu 24.04 LTS, voir `docs/INSTALLATION.md`) + proxy Nginx (`nginx.conf`).
+
+### 💻 Démarrage en local
+Voir `docs/DEMARRAGE_LOCAL.md` (branche `local-dev`).
