@@ -2,6 +2,7 @@
   "name": "burkindi-formations-monorepo",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "npm@10.9.9",
   "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev": "turbo run dev",

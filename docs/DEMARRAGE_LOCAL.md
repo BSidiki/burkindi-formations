@@ -79,3 +79,12 @@ Lancer ensuite `npm run local:setup` puis `npm run dev`.
 - Le téléchargement des PDF (Cloudflare R2), les alertes WhatsApp / e-mail et FIDO2 ne sont pas configurés en local.
 - Après 3 connexions depuis des navigateurs différents dans le mois, le compte apprenant est suspendu (règle anti-partage) :
   relancer `docker compose -f docker-compose.local.yml down -v` puis la mise en place pour repartir de zéro.
+
+## Dépannage
+
+- **`P1001: Can't reach database server`** : PostgreSQL n'est pas démarré. Ouvrir Docker Desktop, attendre qu'il soit prêt,
+  lancer `npm run local:up`, puis vérifier avec `docker ps` que `postgres` et `redis` sont listés. Relancer ensuite `npm run local:setup`.
+- **Un fichier `.env` existe déjà** : `npm run local:setup` le conserve. Pour reprendre la configuration locale à jour,
+  supprimer `.env` puis relancer `npm run local:setup`.
+- **Le port 5432 ou 6379 est déjà utilisé** : un PostgreSQL ou un Redis tourne déjà sur le poste. L'arrêter, ou utiliser
+  la section « Sans Docker ».
