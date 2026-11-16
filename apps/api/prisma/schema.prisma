@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")   // via PgBouncer (?pgbouncer=true)
+  directUrl = env("DIRECT_URL")     // connexion directe pour les migrations
+}
+
+enum Role {
+  APPRENANT
+  ADMIN
+}
+enum AccountStatus {
+  ACTIF
+  EN_ATTENTE
+  SUSPENDU
+}
+enum Voie {
+  DIRECT
+  PROFESSIONNEL
+}
+enum PaymentStatus {
+  EN_ATTENTE
+  VALIDE
+  REJETE
+}
+enum WithdrawalStatus {
+  DEMANDE
+  PAYE
+  REJETE
+}
+enum FeedbackStatus {
+  EN_ATTENTE
+  REPONDU
+}
+
+model User {
+  id            String        @id @default(uuid())
+  nom           String
+  prenom        String
+  telephone     String        @unique   // numéro WhatsApp
+  email         String?       @unique
+  passwordHash  String                  // Argon2id
+  role          Role          @default(APPRENANT)
+  statut        AccountStatus @default(EN_ATTENTE)
+  voie          Voie?
+  niveau        String?                 // CEP, BEPC, BAC, LICENCE, MASTER, CAT_A..CAT_D
+  concours      Concours[]
+  referralCode  String        @unique   // BURK-XXXX
+  referredById  String?
+  referredBy    User?         @relation("Referral", fields: [referredById], references: [id])
+  referrals     User[]        @relation("Referral")
+  balance       Int           @default(0)           // solde de ristournes (FCFA)
+  activeDevice  String?
+  deviceChanges Int           @default(0)           // changements d'appareil du mois
+  deviceChangesResetAt DateTime @default(now())
+  focusLossCount Int          @default(0)
+  totpSecret    String?                 // admin uniquement
+  fidoCredentials Json?                 // admin uniquement (WebAuthn)
+  createdAt     DateTime      @default(now())
+  payments      Payment[]
+  withdrawals   Withdrawal[]
+  attempts      ExamAttempt[]
+  feedbacks     Feedback[]
+  requests      AssistanceRequest[]
+  logs          SecurityLog[]
+}
+
+model Concours {
+  id    String @id @default(uuid())
+  nom   String @unique
+  voie  Voie
+  users User[]
+  questions Question[]
+}
+
+model Payment {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  amount      Int
+  operator    String
+  reference   String?
+  status      PaymentStatus @default(EN_ATTENTE)
+  validatedAt DateTime?
+  createdAt   DateTime      @default(now())
+}
+
+model Question {
+  id           String   @id @default(uuid())
+  concoursId   String
+  concours     Concours @relation(fields: [concoursId], references: [id])
+  matiere      String
+  enonce       String
+  options      Json                // string[]
+  correctIndex Int
+  explication  String
+  publicNote   String?             // note explicative publique (admin)
+  updatedAt    DateTime @updatedAt
+  feedbacks    Feedback[]
+}
+
+model ExamAttempt {
+  id             String   @id @default(uuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  mode           String   // REVISION | EXAMEN_BLANC
+  answers        Json
+  score          Int?     // 0-100, calculé par le worker BullMQ
+  durationSec    Int
+  focusLossCount Int      @default(0)
+  submittedAt    DateTime @default(now())
+  correctedAt    DateTime?
+}
+
+model Feedback {
+  id          String         @id @default(uuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  questionId  String
+  question    Question       @relation(fields: [questionId], references: [id])
+  motif       String
+  message     String
+  statut      FeedbackStatus @default(EN_ATTENTE)
+  relanceCount Int           @default(0)
+  adminReply  String?
+  createdAt   DateTime       @default(now())
+}
+
+model AssistanceRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  sujet     String
+  question  String
+  statut    String   @default("EN_ATTENTE")
+  createdAt DateTime @default(now())
+}
+
+model Resource {            // Bibliothèque & annales (PDF sur Cloudflare R2)
+  id     String @id @default(uuid())
+  titre  String
+  voie   Voie?
+  r2Key  String
+}
+
+model Withdrawal {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  amount    Int
+  operator  String
+  phone     String
+  statut    WithdrawalStatus @default(DEMANDE)
+  createdAt DateTime         @default(now())
+}
+
+model SecurityLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  type       String
+  deviceHash String?
+  ip         String?
+  details    String
+  createdAt  DateTime @default(now())
+  @@index([createdAt])
+}

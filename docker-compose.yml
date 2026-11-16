@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: burkindi
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_DB: burkindi
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U burkindi -d burkindi"]
+      interval: 5s
+      retries: 30
+
+  pgbouncer:
+    image: edoburu/pgbouncer
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_USER: burkindi
+      DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      DB_NAME: burkindi
+      LISTEN_PORT: "6432"
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: "5000"
+      DEFAULT_POOL_SIZE: "50"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redisdata:/data]
+
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    env_file: .env
+    ports: ["127.0.0.1:4000:4000"]
+    depends_on: [pgbouncer, redis]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: "${NEXT_PUBLIC_API_URL}"
+        NEXT_PUBLIC_WS_URL: "${NEXT_PUBLIC_WS_URL}"
+        NEXT_PUBLIC_WHATSAPP: "${NEXT_PUBLIC_WHATSAPP}"
+        NEXT_PUBLIC_PAY_ORANGE: "${NEXT_PUBLIC_PAY_ORANGE}"
+        NEXT_PUBLIC_PAY_MOOV: "${NEXT_PUBLIC_PAY_MOOV}"
+    restart: unless-stopped
+    ports: ["127.0.0.1:3000:3000"]
+    depends_on: [api]
+
+volumes: { pgdata: {}, redisdata: {} }
